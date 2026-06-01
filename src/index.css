@@ -1,0 +1,16 @@
+@import "tailwindcss";
+:root {
+  --bg: #ffff;
+  --text: #E5E7EB;
+  --card:#0000;
+  --primary:#8B5CF6;
+  --sucess:#22C55E;
+  --danger:#EF4444;
+  --muted:#94A3B8;
+  --border:#334155;
+}
+body{
+    background-color: var(--bg);
+    color: var(--text);
+    min-height: screen;
+}
