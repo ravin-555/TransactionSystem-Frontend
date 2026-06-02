@@ -64,20 +64,17 @@ const Register = () => {
   const Onsubmit = async(data) => {
     if(cooldown) return; // Prevent multiple submits during cooldown
     setCooldown(true); // Set cooldown to true when submission starts   
-console.log(data)
     try{
         const result = await register_user(data); // Call the register function from the API
-console.log(result)
+
         setSucess("Sucessfully registered your Information")
         setTimeout(() => {
             navigate('/',{replace:true}); // navigate after sucesful 
-console.log("Here after delay");
             
         }, 3000);
     
     }catch(err){
         if(err.response){
-console.log("Error response:", err.response);
             setError(err.response.data.message || "Registration Failed")
         }
     }

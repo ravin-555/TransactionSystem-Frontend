@@ -20,7 +20,6 @@ export default function DashboardHome() {
     const loadDashboard = async () => {
         try {
             const userdata = await getuserdata();
-console.log("userdata :",userdata)
             if(userdata.role === "admin"){
                 return <Navigate to="/admin/dashboard" replace={true} />
             }

@@ -14,8 +14,6 @@ export default function TransactionList({ transactions }) {
 
 
     useEffect(() => {
-console.log("Filter :",filter)
-console.log("Transaction :",filteredTransactions)
       filter=="" && setFilteredTransactions(transactions) //if filter is all then show all transactions
 
       if(filter!=""){
@@ -42,8 +40,7 @@ console.log("Transaction :",filteredTransactions)
                     </Tooltip>
                     <select
                         value={filter}
-onChange={(e) => {console.log(e) 
-                            setFilter(e.target.value)}}
+onChange={(e) => {setFilter(e.target.value)}}
                         className=" cursor-pointer  text-slate-500 border border-white/10 rounded-md py-2 px-2 focus:outline-none focus:ring-2 focus:ring-green-500"
                     >
                         <option value="" key={"0"}>All</option>

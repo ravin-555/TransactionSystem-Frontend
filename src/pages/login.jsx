@@ -75,12 +75,11 @@ export default function Login() {
     if (cooldown) return; //prevent multiple submits during cooldown
 
     setCooldown(true);
-console.log("Login data:", data);
 
     //api call to post data
     try {
       const result = await login(data);
-console.log(result);
+
 
       // store jwt token in local storage 
       localStorage.setItem("token", result?.token)

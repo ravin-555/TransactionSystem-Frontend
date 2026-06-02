@@ -36,7 +36,7 @@ export default function useTokenExpiry() {
 
             }
             catch (err) {
-console.log("Token decode error", err);
+                console.log("Token decode error", err);
             }
 
         }, 1000);

@@ -34,12 +34,8 @@ export default function DashboardLayout() {
   
   }
   const handleTransfer=async (data)=>{
-console.log("handle transfer dashglayout :",data.amount,data.toUser);
-    
     // transfer logic here
    const res=transfer({amount:data.amount,toUser:data.toUser})
-console.log("transfer response :",res);
-   
     setModal("")
 
   }

@@ -26,7 +26,6 @@ export default function AdminPanel() {
             fetchTransactions(); // refresh list after reversal
 
         } catch (err) {
-            console.error(err);
             alert("Failed to reverse transaction");
         }
     };

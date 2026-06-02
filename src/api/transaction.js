@@ -39,7 +39,6 @@ export const transfer=async (data) => {
 
 export const reverseTransaction=async (id) => {
     const Key = crypto.randomUUID();
-console.log("Reversing transaction with id:", id, "using idempotency key:", Key);
     try{
         const res = await api.post(`/admin/transactions/${id}/reverse`,{},
             {
