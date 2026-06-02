@@ -1,7 +1,5 @@
 // A modal component for entering amount for deposit or withdraw
 import { useState } from "react";
-
-
 export default function AmountModal({ type, onSubmit, onClose }) {
 
     const [amount, setAmount] = useState("");
