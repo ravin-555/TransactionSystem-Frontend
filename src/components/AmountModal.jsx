@@ -1,5 +1,4 @@
 // A modal component for entering amount for deposit or withdraw
-import { set } from "mongoose/lib/driver";
 import { useState } from "react";
 
 
