@@ -3,7 +3,7 @@ import api from "./axios";
 
 export const getuserdata=async() => {
     try{
-        const res=await api.get('http://localhost:3000/api/auth/user');
+        const res=await api.get('/auth/user');
         return res.data?.data;
     }catch(err){
         throw new Error(err.message);
@@ -12,7 +12,7 @@ export const getuserdata=async() => {
 }
 export const gettransactions=async () => {
     try {
-        const res=await api.get('http://localhost:3000/api/transactions/history');
+        const res=await api.get('/transactions/history');
         return res.data?.data;
     } catch (error) {
         throw new Error(err.message);
@@ -21,7 +21,7 @@ export const gettransactions=async () => {
 }
 export const getalltransactions=async () => {
     try {
-        const res=await api.get('http://localhost:3000/api/admin/transactions/history');
+        const res=await api.get('/admin/transactions/history');
         return res.data?.data;
     } catch (error) {
         throw new Error(err.message);
