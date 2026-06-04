@@ -1,6 +1,6 @@
 
 import { use, useEffect, useState } from "react"
-import { Navigate, useOutletContext } from "react-router-dom"
+import { useNavigate, useOutletContext } from "react-router-dom"
 import { getuserdata, gettransactions } from "../api/user"
 import Balancecard from "../components/Balancecard"
 import QuickActions from "../components/QuickActions"
@@ -11,7 +11,7 @@ import Footer from "../components/Footer"
 export default function DashboardHome() {
 
     const { onDeposit, onWithdraw, onTransfer ,refreshFlag} = useOutletContext();
-
+    const navigate = useNavigate();
     const [userinfo, setUserinfo] = useState(null);
     const [transactions, setTransactions] = useState([]);
     const [error, setError] = useState(null);
@@ -21,8 +21,10 @@ export default function DashboardHome() {
         try {
             const userdata = await getuserdata();
             if(userdata.role === "admin"){
-                return <Navigate to="/admin/dashboard" replace={true} />
+                navigate("/admin/dashboard", { replace: true });
+                return;
             }
+
             const tx = await gettransactions();
 
             setUserinfo(userdata);

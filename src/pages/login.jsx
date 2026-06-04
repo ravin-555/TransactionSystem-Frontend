@@ -1,6 +1,7 @@
 import { useForm } from "react-hook-form";
 import { useState, useRef, useEffect } from "react";
 import { login } from "../api/auth";
+import isAdmin from "../hooks/Admin_acess";
 import { useNavigate } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
 
@@ -84,8 +85,12 @@ export default function Login() {
       // store jwt token in local storage 
       localStorage.setItem("token", result?.token)
 
-      navigate("/admin/dashboard", { replace: true }); // Redirect to admin dashboard after successful login , 
-      // it will be further redirected to user dashboard if not admin by AdminRoutes component
+      if(isAdmin){
+        navigate("/admin/dashboard", { replace: true });
+      }
+      else{
+        navigate("/dashboard", { replace: true });
+      }
 
       // reset form
       reset();
