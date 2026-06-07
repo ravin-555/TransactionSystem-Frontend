@@ -41,7 +41,7 @@ api.interceptors.response.use(
         const errorMessage = data?.message;
 
         // Check if haven't tried retrying yet
-        if (!originalRequest._retry) {
+        if (!originalRequest._retry && !originaalRequest.url.includes('/auth/refresh')) {
             // finally mark the request as having been retried to prevent infinite loops
             originalRequest._retry = true;
             switch (status) {
@@ -66,7 +66,7 @@ console.log("Axios: Attempting token refresh due to 401 response...");
 
                     } catch (refreshError) {
                         localStorage.removeItem("token");
-                        window.location.href = "/login";
+                        window.location.replace("/login");
                         toast.error("Session expired. Please log in again.");
                         break;
 
@@ -86,7 +86,7 @@ console.log("Axios: Attempting token refresh due to 401 response...");
                         detail: { seconds: retryafterseconds }
                     });
                     window.dispatchEvent(event);
-                
+                    break;
                     
                 case 500:
                     // Server error
