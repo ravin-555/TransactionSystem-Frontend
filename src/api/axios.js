@@ -1,105 +1,212 @@
 import axios from "axios";
 import { toast } from "react-toastify";
-// centralized axios instance
+
+// Main API instance
 const api = axios.create({
     baseURL: import.meta.env.VITE_BASE_API_URL,
     headers: {
-        "Content-type": "application/json"
+        "Content-Type": "application/json",
     },
-    withCredentials: true // to include cookies in requests for token refresh
+    withCredentials: true,
 });
 
-// Add a request interceptor to include JWT token to req headers and emit global loading events
-api.interceptors.request.use((config) => {
-    // signal start (safe for non-browser envs)
-    try { window.dispatchEvent(new CustomEvent('global-loading', { detail: { type: 'start' } })); } catch (e) { }
-    const token = localStorage.getItem("token");
-    if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-})
+// ======================
+// REQUEST INTERCEPTOR
+// ======================
 
-// Add a response interceptor to handle unauthorized responses globally and emit loading stop events
+api.interceptors.request.use(
+    (config) => {
+        try {
+            window.dispatchEvent(
+                new CustomEvent("global-loading", {
+                    detail: { type: "start" },
+                })
+            );
+        } catch { }
+
+        const token = localStorage.getItem("token");
+
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
+
+        return config;
+    },
+    (error) => Promise.reject(error)
+);
+
+// ======================
+// RESPONSE INTERCEPTOR
+// ======================
 
 api.interceptors.response.use(
     (response) => {
-        try { window.dispatchEvent(new CustomEvent('global-loading', { detail: { type: 'stop' } })); } catch (e) { }
+        try {
+            window.dispatchEvent(
+                new CustomEvent("global-loading", {
+                    detail: { type: "stop" },
+                })
+            );
+        } catch { }
+
         return response;
     },
-    async (error) => {
-        try { window.dispatchEvent(new CustomEvent('global-loading', { detail: { type: 'stop' } })); } catch (e) { }
 
-        const { response } = error;
-        if (!response) {
-            toast.error("Network error: Please check your internet connection.");
+    async (error) => {
+        try {
+            window.dispatchEvent(
+                new CustomEvent("global-loading", {
+                    detail: { type: "stop" },
+                })
+            );
+        } catch { }
+
+        const originalRequest = error.config;
+
+        // Network errors
+        if (!error.response) {
+            toast.error(
+                "Network error. Please check your internet connection."
+            );
             return Promise.reject(error);
         }
 
-        const originalRequest = error?.config;
-        const { data, status } = error?.response;
-        const errorMessage = data?.message;
+        const { status, data } = error.response;
 
-        // Check if haven't tried retrying yet
-        if (!originalRequest._retry && !originaalRequest.url.includes('/auth/refresh')) {
-            // finally mark the request as having been retried to prevent infinite loops
+        const errorMessage =
+            data?.error?.message ||
+            data?.message ||
+            data?.error ||
+            "Something went wrong";
+
+        // ======================
+        // TOKEN REFRESH LOGIC
+        // ======================
+
+        const isRefreshRequest =
+            originalRequest?.url?.includes("/auth/refresh");
+
+        const isLoginOrRegister =
+            originalRequest?.url?.includes("/auth/login") ||
+            originalRequest?.url?.includes("/auth/register");
+
+        if (
+            status === 401 &&
+            !originalRequest?._retry &&
+            !isRefreshRequest &&
+            !isLoginOrRegister
+        ) {
             originalRequest._retry = true;
-            switch (status) {
-                case 401:
-                    // Authentication error, try refreshing token
-                    try {
-console.log("Axios: Attempting token refresh due to 401 response...");
-                        const res = await axios.post(
-                            import.meta.env.VITE_REFRESH_TOKEN_URL,
-                            {},
-                            { withCredentials: true }
-                        );
 
-                        const newToken = res.data.token;
+            try {
+                console.log(
+                    "Axios: Attempting token refresh..."
+                );
 
-                        localStorage.setItem("token", newToken);
-
-                        originalRequest.headers.Authorization =
-                            `Bearer ${newToken}`;
-
-                        return api(originalRequest); // Retry the original request with new token
-
-                    } catch (refreshError) {
-                        localStorage.removeItem("token");
-                        window.location.replace("/login");
-                        toast.error("Session expired. Please log in again.");
-                        break;
-
+                const refreshResponse = await axios.post(
+                    import.meta.env.VITE_REFRESH_TOKEN_URL,
+                    {},
+                    {
+                        withCredentials: true,
                     }
-                case 403:
-                    // Authorization error
-                    toast.error(errorMessage || "PERMISSION DENIED: You don't have permission to perform this action.");
-                    break;
-                
-                case 429:
-                    // Too many requests
-                    toast.error(errorMessage || "TOO MANY REQUESTS:  Please try again later.");
-                    const retryafterseconds = Number(error.response.headers['ratelimit-reset']) || 30; // Default to 30 seconds if not provided
+                );
 
-                    // globally dispatch
-                    const event = new CustomEvent('rate-limit', {
-                        detail: { seconds: retryafterseconds }
-                    });
-                    window.dispatchEvent(event);
-                    break;
-                    
-                case 500:
-                    // Server error
-                    toast.error(errorMessage || "SERVER ERROR: An unexpected error occurred on the server.");
-                    break;
+                const newToken =
+                    refreshResponse.data.token;
 
-                default:
-                    // Other errors
-                    toast.error(errorMessage || `ERROR: ${status} ${error.response.statusText}`);
+                localStorage.setItem(
+                    "token",
+                    newToken
+                );
+
+                originalRequest.headers.Authorization =
+                    `Bearer ${newToken}`;
+
+                return api(originalRequest);
+            } catch (refreshError) {
+                console.log(
+                    "Axios: Refresh token failed."
+                );
+
+                localStorage.removeItem("token");
+
+                toast.error(
+                    "Session expired. Please log in again."
+                );
+
+                window.location.replace("/login");
+
+                return Promise.reject(refreshError);
+            }
+        }
+
+        // ======================
+        // ERROR HANDLING
+        // ======================
+
+        switch (status) {
+            case 400:
+                toast.error(errorMessage);
+                break;
+
+            case 401:
+                toast.error(errorMessage);
+                break;
+
+            case 403:
+                toast.error(
+                    errorMessage ||
+                    "Permission denied."
+                );
+                break;
+
+            case 404:
+                toast.error(
+                    errorMessage ||
+                    "Resource not found."
+                );
+                break;
+
+            case 429: {
+                toast.error(
+                    errorMessage ||
+                    "Too many requests. Please try again later."
+                );
+
+                const retryAfterSeconds =
+                    Number(
+                        error.response.headers[
+                        "ratelimit-reset"
+                        ]
+                    ) || 30;
+
+                window.dispatchEvent(
+                    new CustomEvent("rate-limit", {
+                        detail: {
+                            seconds: retryAfterSeconds,
+                        },
+                    })
+                );
+
+                break;
             }
 
-        }
-        return Promise.reject(error); // Reject the error to allow individual request handlers to handle it as well
-    });
+            case 500:
+                toast.error(
+                    errorMessage ||
+                    "Internal server error."
+                );
+                break;
 
-export default api
+            default:
+                toast.error(
+                    errorMessage ||
+                    `Error ${status}`
+                );
+        }
+
+        return Promise.reject(error);
+    }
+);
+
+export default api;
